@@ -2,9 +2,7 @@ name: Upstream Sync
 
 permissions:
   contents: write
-  workflows: write
   issues: write
-  actions: write
 
 on:
   schedule:
@@ -18,8 +16,6 @@ jobs:
     if: ${{ github.event.repository.fork }}
 
     steps:
-      - uses: actions/checkout@v6
-
       - name: Clean issue notice
         if: ${{ github.event.repository.has_issues }}
         uses: actions-cool/issues-helper@v3
@@ -29,13 +25,9 @@ jobs:
 
       - name: Sync upstream changes
         id: sync
-        uses: aormsby/Fork-Sync-With-Upstream-action@v3.4
-        with:
-          upstream_sync_repo: lobehub/lobehub
-          upstream_sync_branch: main
-          target_sync_branch: main
-          target_repo_token: ${{ secrets.GITHUB_TOKEN }} # automatically generated, no need to set
-          test_mode: false
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh api -X POST "repos/${GITHUB_REPOSITORY}/merge-upstream" -f branch='main'
 
       - name: Sync check
         if: ${{ failure() && github.event.repository.has_issues }}
